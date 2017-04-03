@@ -1,0 +1,1 @@
+audio_enable=yes;audio_codec=mpga;acodec_bitrate=128;acodec_channels=2;acodec_samplerate=44100;video_enable=yes;vcodec_scale=Auto;vcodec_width=0;vcodec_height=720;video_codec=mp4v;vcodec_framerate=24;vcodec_bitrate=0;muxer_mux=mp4
