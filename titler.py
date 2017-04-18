@@ -67,8 +67,15 @@ class TitlerApp:
                                    command=self._openBrowser)
         openBrowserButton.grid(row=0, column=0)
 
+        self.previewVar = IntVar()
+        previewCheckbutton = Checkbutton(fileFrame, text="Preview",
+                                         command=self.updateFile,
+                                         variable=self.previewVar)
+        previewCheckbutton.grid(row=0, column=1)
+        self.previewVar.set(1)
+
         self.statusLabel = Label(fileFrame)
-        self.statusLabel.grid(row=0, column=1)
+        self.statusLabel.grid(row=0, column=2)
 
         row += 1
 
@@ -311,16 +318,23 @@ class TitlerApp:
         self.statusLabel.config(text="Updated", foreground="#000000")
 
     def _generateHTML(self):
+        preview = self.previewVar.get() == 1
+
         rules = [
             ('*', {
                 'margin': '0pt',
                 'padding': '0pt'
             }),
             ('body', {
-                'background-color': self.backgroundColor,
+                'background-color': self.backgroundColor if preview \
+                    else "#000000"
             }),
             ('pre', {
-                'color': self.textColor,
+                'display': 'table',
+                'border-style': 'none' if preview else 'solid',
+                'border-color': "#FF0000",
+                'border-width': '1px',
+                'color': self.textColor if preview else "#FFFFFF",
                 'font-family': self.fontVar.get(),
                 'font-size': self.fontSizeVar.get() + 'pt',
                 'letter-spacing': self.letterSpacingVar.get() + 'pt',
@@ -365,6 +379,7 @@ class TitlerApp:
 """
 
         text = self.textBox.get("1.0", END)
+        text = text.rstrip()
         if self.capsModeVar.get() == "upper":
             text = text.upper()
         elif self.capsModeVar.get() == "lower":
