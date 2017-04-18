@@ -74,7 +74,7 @@ class TitlerApp:
 
         self.textBox = ScrolledText(frame, width=40, height=10)
         self.textBox.grid(row=row, sticky=N+S+E+W)
-        self.textBox.bind_all('<<Modified>>', self.updateFile)
+        self.textBox.bind_all('<<Modified>>', self._textboxCallback)
         row += 1
 
         propertiesFrame = Frame(frame)
@@ -289,24 +289,29 @@ class TitlerApp:
     def _openBrowser(self):
         webbrowser.open(self.file.name)
 
+    def _textboxCallback(self, *args, **kwargs):
+        self.textBox.edit_modified(0)  # allow <<Modified>> event to run again
+        self.updateFile()
+
     def updateFile(self, *args, **kwargs):
+        if not self.ready:
+            return
+
         # update gui
         self.textColorButton.configure(background=self.textColor)
         self.backgroundColorButton.configure(background=self.backgroundColor)
 
         try:
-            self._updateFileRaw()
-            self._updateFileRaw()
-            self.statusLabel.config(text="Updated", foreground="#000000")
+            text = self._generateHTML()
         except BaseException:
             self.statusLabel.config(text="ERROR", foreground="#FF0000")
-
-    def _updateFileRaw(self):
-        if not self.ready:
             return
-        self.file.truncate()
-        self.file.seek(0)
 
+        self._writeFile(text)
+        self._writeFile(text)
+        self.statusLabel.config(text="Updated", foreground="#000000")
+
+    def _generateHTML(self):
         rules = [
             ('*', {
                 'margin': '0pt',
@@ -369,10 +374,13 @@ class TitlerApp:
         text = text.replace('\n', '<br>')
         htmlStr = htmlStr.format(style=styleStr,
                                  text=text)
+        return htmlStr
 
-        self.file.write(htmlStr)
+    def _writeFile(self, text):
+        self.file.truncate()
+        self.file.seek(0)
+        self.file.write(text)
 
-        self.textBox.edit_modified(0) # allow <<Modified>> event to run again
 
 if __name__ == "__main__":
     root = Tk()
