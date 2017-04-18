@@ -329,8 +329,9 @@ class TitlerApp:
                 'margin-bottom': self.paragraphMarginVar.get() + 'pt',
                 'width': 'auto' if float(self.wrapWidthVar.get()) == 0 \
                     else (self.wrapWidthVar.get() + 'pt'),
-                'white-space': 'pre' if float(self.wrapWidthVar.get()) == 0 \
-                    else 'pre-wrap',
+                'white-space': 'normal' if self.textAlignVar.get() == 'justify'\
+                    else ('pre' if float(self.wrapWidthVar.get()) == 0
+                    else 'pre-wrap'),
                 'text-align': self.textAlignVar.get(),
                 'font-weight': int(self.fontWeightVar.get()) * 100,
                 'font-style': "italic" if self.italicsVar.get()==1 \
