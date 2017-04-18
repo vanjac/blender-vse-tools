@@ -56,39 +56,50 @@ class TitlerApp:
         self.root = root
 
         frame = Frame(root)
-        frame.pack(side=TOP, fill=BOTH, expand=True)
+        frame.pack(fill=BOTH, expand=True)
 
-        Grid.columnconfigure(frame, 0, weight=1)
+        notebook = Notebook()
+        notebook.pack(fill=BOTH, expand=True)
+
+
+        textFrame = Frame()
+        notebook.add(textFrame, text="Text")
+
+        Grid.columnconfigure(textFrame, 0, weight=1)
 
         row = 0
 
-        fileFrame = Frame(frame)
-        fileFrame.grid(row=row, sticky=W)
+        textTopPanel = Frame(textFrame)
+        textTopPanel.grid(row=row, sticky=W)
 
-        openBrowserButton = Button(fileFrame, text="Open Browser",
+        openBrowserButton = Button(textTopPanel, text="Open Browser",
                                    command=self._openBrowser)
         openBrowserButton.grid(row=0, column=0)
 
         self.previewVar = IntVar()
-        previewCheckbutton = Checkbutton(fileFrame, text="Preview",
+        previewCheckbutton = Checkbutton(textTopPanel, text="Preview",
                                          command=self.updateFile,
                                          variable=self.previewVar)
         previewCheckbutton.grid(row=0, column=1)
         self.previewVar.set(1)
 
-        self.statusLabel = Label(fileFrame)
+        self.statusLabel = Label(textTopPanel)
         self.statusLabel.grid(row=0, column=2)
 
         row += 1
 
-        self.textBox = ScrolledText(frame, width=40, height=10)
+        self.textBox = ScrolledText(textFrame, width=40, height=10)
         self.textBox.grid(row=row, sticky=N+S+E+W)
         self.textBox.bind_all('<<Modified>>', self._textboxCallback)
         row += 1
 
-        propertiesFrame = Frame(frame)
+        propertiesFrame = Frame(textFrame)
         propertiesFrame.grid(row=row, sticky=E+W)
         self._makePropertiesFrame(propertiesFrame)
+
+
+        layoutFrame = Frame()
+        notebook.add(layoutFrame, text="Layout")
 
     def _makePropertiesFrame(self, frame):
         #Grid.columnconfigure(frame, 0, weight=1)
