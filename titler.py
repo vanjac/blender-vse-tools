@@ -31,6 +31,7 @@ def generateCSS(rules):
 
 # https://www.w3schools.com/cssref/css_websafe_fonts.asp
 fonts = [
+    'initial',
     'Georgia, serif',
     '"Palatino Linotype", "Book Antiqua", Palatino, serif',
     '"Times New Roman", Times, serif',
