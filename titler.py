@@ -231,13 +231,27 @@ class TitlerApp:
         strikethroughCheckbutton.grid(row=row, column=1, sticky=W)
         row += 1
 
-        self.smallCapsVar = IntVar()
-        smallCapsLabel = Label(frame, text="Small caps:")
-        smallCapsLabel.grid(row=row, column=0, sticky=E)
-        smallCapsCheckbutton = Checkbutton(frame, command=self.updateFile,
-                                   variable=self.smallCapsVar)
-        smallCapsCheckbutton.grid(row=row, column=1, sticky=W)
+        capsModeLabel = Label(frame, text="Caps:")
+        capsModeLabel.grid(row=row, column=0, sticky=E)
+
+        self.capsModeVar = StringVar()
+        Radiobutton(frame, text="Normal", variable=self.capsModeVar,
+                    value="normal", command=self.updateFile) \
+            .grid(row=row, column=1, sticky=W)
         row += 1
+        Radiobutton(frame, text="ALL CAPS", variable=self.capsModeVar,
+                    value="upper", command=self.updateFile) \
+            .grid(row=row, column=1, sticky=W)
+        row += 1
+        Radiobutton(frame, text="all lowercase", variable=self.capsModeVar,
+                    value="lower", command=self.updateFile) \
+            .grid(row=row, column=1, sticky=W)
+        row += 1
+        Radiobutton(frame, text="Small Caps", variable=self.capsModeVar,
+                    value="small", command=self.updateFile) \
+            .grid(row=row, column=1, sticky=W)
+        row += 1
+        self.capsModeVar.set("normal")
 
         self.ready = True
         self.updateFile()
@@ -294,7 +308,8 @@ class TitlerApp:
                 'text-decoration':
                     ("underline " if self.underlineVar.get()==1 else "") \
                   + ("line-through " if self.strikethroughVar.get()==1 else ""),
-                'font-variant': "small-caps" if self.smallCapsVar.get()==1 \
+                'font-variant': \
+                    "small-caps" if self.capsModeVar.get() == "small" \
                     else "normal"
             })
         ]
@@ -317,7 +332,13 @@ class TitlerApp:
 </body>
 </html>
 """
-        text = html.escape(self.textBox.get("1.0", END))
+
+        text = self.textBox.get("1.0", END)
+        if self.capsModeVar.get() == "upper":
+            text = text.upper()
+        elif self.capsModeVar.get() == "lower":
+            text = text.lower()
+        text = html.escape(text)
         text = text.replace('\n\n', '</pre><pre>')
         text = text.replace('\n', '<br>')
         htmlStr = htmlStr.format(style=styleStr,
