@@ -60,9 +60,16 @@ class TitlerApp:
 
         row = 0
 
-        openBrowserButton = Button(frame, text="Open Browser",
+        fileFrame = Frame(frame)
+        fileFrame.grid(row=row, sticky=W)
+
+        openBrowserButton = Button(fileFrame, text="Open Browser",
                                    command=self._openBrowser)
-        openBrowserButton.grid(row=row, sticky=W)
+        openBrowserButton.grid(row=0, column=0)
+
+        self.statusLabel = Label(fileFrame)
+        self.statusLabel.grid(row=0, column=1)
+
         row += 1
 
         self.textBox = ScrolledText(frame, width=40, height=10)
@@ -165,6 +172,17 @@ class TitlerApp:
         paragraphMarginBox.grid(row=row, column=1, sticky=W)
         self.paragraphMarginVar.set('0')
         self.paragraphMarginVar.trace(mode="w", callback=self.updateFile)
+        row += 1
+
+        wrapWidthLabel = Label(frame, text="Wrap width:")
+        wrapWidthLabel.grid(row=row, column=0, sticky=E)
+
+        self.wrapWidthVar = StringVar()
+        wrapWidthBox = Spinbox(frame, from_=0, to=9999, width=5,
+                               textvariable=self.wrapWidthVar)
+        wrapWidthBox.grid(row=row, column=1, sticky=W)
+        self.wrapWidthVar.set('0')
+        self.wrapWidthVar.trace(mode="w", callback=self.updateFile)
         row += 1
 
         textAlignLabel = Label(frame, text="Text align:")
@@ -276,8 +294,12 @@ class TitlerApp:
         self.textColorButton.configure(background=self.textColor)
         self.backgroundColorButton.configure(background=self.backgroundColor)
 
-        self._updateFileRaw()
-        self._updateFileRaw()
+        try:
+            self._updateFileRaw()
+            self._updateFileRaw()
+            self.statusLabel.config(text="Updated", foreground="#000000")
+        except BaseException:
+            self.statusLabel.config(text="ERROR", foreground="#FF0000")
 
     def _updateFileRaw(self):
         if not self.ready:
@@ -301,6 +323,10 @@ class TitlerApp:
                 'word-spacing': self.wordSpacingVar.get() + 'pt',
                 'line-height': self.lineHeightVar.get() + '%',
                 'margin-bottom': self.paragraphMarginVar.get() + 'pt',
+                'width': 'auto' if float(self.wrapWidthVar.get()) == 0 \
+                    else (self.wrapWidthVar.get() + 'pt'),
+                'white-space': 'pre' if float(self.wrapWidthVar.get()) == 0 \
+                    else 'pre-wrap',
                 'text-align': self.textAlignVar.get(),
                 'font-weight': int(self.fontWeightVar.get()) * 100,
                 'font-style': "italic" if self.italicsVar.get()==1 \
