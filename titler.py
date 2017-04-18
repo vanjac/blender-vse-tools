@@ -1,4 +1,6 @@
 from tkinter import *
+import tkinter
+from tkinter.ttk import *
 from tkinter.scrolledtext import ScrolledText
 from tkinter import colorchooser
 import webbrowser
@@ -100,16 +102,16 @@ class TitlerApp:
         textColorLabel = Label(frame, text="Text color:")
         textColorLabel.grid(row=row, column=0, sticky=E)
 
-        self.textColorButton = Button(frame, width=5,
-                                      command=self._pickTextColor)
+        self.textColorButton = tkinter.Button(frame, width=5,
+                                              command=self._pickTextColor)
         self.textColorButton.grid(row=row, column=1, sticky=W)
         row += 1
 
         backgroundColorLabel = Label(frame, text="Background color:")
         backgroundColorLabel.grid(row=row, column=0, sticky=E)
 
-        self.backgroundColorButton = Button(frame, width=5,
-                                            command=self._pickBackgroundColor)
+        self.backgroundColorButton = tkinter.Button(frame, width=5,
+            command=self._pickBackgroundColor)
         self.backgroundColorButton.grid(row=row, column=1, sticky=W)
         row += 1
 
