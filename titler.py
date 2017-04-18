@@ -130,14 +130,42 @@ class TitlerApp:
         fontLabel = Label(frame, text="Font:")
         fontLabel.grid(row=row, column=0, sticky=E)
 
-        self.fontVar = StringVar()
-        self.fontVar.set(fonts[0])
-        fontOptionMenu = \
-            OptionMenu(*([frame, self.fontVar]
-                         + fonts))
-        fontOptionMenu.grid(row=row, column=1, sticky=W)
-        self.fontVar.trace(mode="w", callback=self.updateFile)
+        self.fontModeVar = StringVar()
+
+        websafeFontFrame = Frame(frame)
+        websafeFontFrame.grid(row=row, column=1, sticky=W)
         row += 1
+
+        Radiobutton(websafeFontFrame, text="Web Safe:",
+                    variable=self.fontModeVar, value="websafe",
+                    command=self.updateFile) \
+            .grid(row=0, column=0)
+
+        self.websafeFontVar = StringVar()
+        self.websafeFontVar.set(fonts[0])
+        fontOptionMenu = \
+            OptionMenu(*([websafeFontFrame, self.websafeFontVar]
+                         + fonts))
+        fontOptionMenu.grid(row=0, column=1)
+        self.websafeFontVar.trace(mode="w", callback=self.updateFile)
+
+        googleFontFrame = Frame(frame)
+        googleFontFrame.grid(row=row, column=1, sticky=W)
+        row += 1
+
+        Radiobutton(googleFontFrame, text="Google:",
+                    variable=self.fontModeVar, value="google",
+                    command=self.updateFile) \
+            .grid(row=0, column=0)
+
+        self.googleFontVar = StringVar()
+        googleFontEntry = Entry(googleFontFrame, width=16,
+                                textvariable=self.googleFontVar)
+        googleFontEntry.grid(row=0, column=1)
+        self.googleFontVar.set("")
+        self.googleFontVar.trace(mode="w", callback=self.updateFile)
+
+        self.fontModeVar.set("websafe")
 
         fontSizeLabel = Label(frame, text="Font size:")
         fontSizeLabel.grid(row=row, column=0, sticky=E)
@@ -334,6 +362,21 @@ class TitlerApp:
     def _generateHTML(self):
         preview = self.previewVar.get() == 1
 
+        fontName = ""
+        fontLink = ""
+        fontMode = self.fontModeVar.get()
+        if fontMode == 'websafe':
+            fontName = self.websafeFontVar.get()
+        elif fontMode == 'google':
+            fontName = self.googleFontVar.get()
+            fontLink = '<link rel="stylesheet" type="text/css" ' \
+                'href="https://fonts.googleapis.com/css?family=' \
+                + (fontName.replace(' ', '+')) + ':' \
+                + self.fontWeightVar.get() + '00' \
+                + ('i' if self.italicsVar.get()==1 else '') \
+                + '">'
+            fontName = "'" + fontName + "'"
+
         rules = [
             ('*', {
                 'margin': '0pt',
@@ -349,7 +392,7 @@ class TitlerApp:
                 'border-color': "#FF0000",
                 'border-width': '1px',
                 'color': self.textColor if preview else "#FFFFFF",
-                'font-family': self.fontVar.get(),
+                'font-family': fontName,
                 'font-size': self.fontSizeVar.get() + 'pt',
                 'letter-spacing': self.letterSpacingVar.get() + 'pt',
                 'word-spacing': self.wordSpacingVar.get() + 'pt',
@@ -380,6 +423,7 @@ class TitlerApp:
 <html>
 <head>
 <meta charset="UTF-8">
+{link}
 <style>
 {style}
 </style>
@@ -401,7 +445,8 @@ class TitlerApp:
         text = html.escape(text)
         text = text.replace('\n\n', '</pre><pre>')
         text = text.replace('\n', '<br>')
-        htmlStr = htmlStr.format(style=styleStr,
+        htmlStr = htmlStr.format(link=fontLink,
+                                 style=styleStr,
                                  text=text)
         return htmlStr
 
