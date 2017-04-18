@@ -308,7 +308,6 @@ class TitlerApp:
             return
 
         self._writeFile(text)
-        self._writeFile(text)
         self.statusLabel.config(text="Updated", foreground="#000000")
 
     def _generateHTML(self):
@@ -377,9 +376,10 @@ class TitlerApp:
         return htmlStr
 
     def _writeFile(self, text):
-        self.file.truncate()
         self.file.seek(0)
+        self.file.truncate(0)
         self.file.write(text)
+        self.file.flush()
 
 
 if __name__ == "__main__":
