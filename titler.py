@@ -159,7 +159,7 @@ class TitlerApp:
             .grid(row=0, column=0)
 
         self.googleFontVar = StringVar()
-        googleFontEntry = Entry(googleFontFrame, width=16,
+        googleFontEntry = Entry(googleFontFrame, width=22,
                                 textvariable=self.googleFontVar)
         googleFontEntry.grid(row=0, column=1)
         self.googleFontVar.set("")
