@@ -477,6 +477,9 @@ class TitlerApp:
             return
         self.processedImage = clipboardImage
 
+        bbox = self.processedImage.getbbox()
+        self.processedImage = self.processedImage.crop(bbox)
+
         thumbnail = self.processedImage.resize((384,
             int(self.processedImage.height/self.processedImage.width*384.0)),
             Image.BICUBIC)
