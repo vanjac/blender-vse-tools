@@ -2,7 +2,8 @@ from tkinter import *
 import tkinter
 from tkinter.ttk import *
 from tkinter.scrolledtext import ScrolledText
-from tkinter import colorchooser
+from tkinter import colorchooser, filedialog, messagebox
+from PIL import Image, ImageGrab, ImageTk
 import webbrowser
 import html
 
@@ -59,7 +60,7 @@ class TitlerApp:
         frame = Frame(root)
         frame.pack(fill=BOTH, expand=True)
 
-        notebook = Notebook()
+        notebook = Notebook(frame)
         notebook.pack(fill=BOTH, expand=True)
 
 
@@ -68,10 +69,8 @@ class TitlerApp:
 
         Grid.columnconfigure(textFrame, 0, weight=1)
 
-        row = 0
-
         textTopPanel = Frame(textFrame)
-        textTopPanel.grid(row=row, sticky=W)
+        textTopPanel.grid(row=0, sticky=W)
 
         openBrowserButton = Button(textTopPanel, text="Open Browser",
                                    command=self._openBrowser)
@@ -87,20 +86,35 @@ class TitlerApp:
         self.statusLabel = Label(textTopPanel)
         self.statusLabel.grid(row=0, column=2)
 
-        row += 1
-
         self.textBox = ScrolledText(textFrame, width=40, height=10)
-        self.textBox.grid(row=row, sticky=N+S+E+W)
+        self.textBox.grid(row=1, sticky=N+S+E+W)
         self.textBox.bind_all('<<Modified>>', self._textboxCallback)
-        row += 1
 
         propertiesFrame = Frame(textFrame)
-        propertiesFrame.grid(row=row, sticky=E+W)
+        propertiesFrame.grid(row=2, sticky=E+W)
         self._makePropertiesFrame(propertiesFrame)
 
 
         layoutFrame = Frame()
         notebook.add(layoutFrame, text="Layout")
+
+        layoutTopPanel = Frame(layoutFrame)
+        layoutTopPanel.grid(row=0, sticky=W)
+
+        getFromClipboardButton = Button(layoutTopPanel,
+                                        text="Get from clipboard",
+                                        command=self._getImageFromClipboard)
+        getFromClipboardButton.grid(row=0, column=0)
+
+        saveButton = Button(layoutTopPanel, text="Save Image",
+                            command=self._saveImage)
+        saveButton.grid(row=0, column=1)
+
+        self.imageLabel = Label(layoutFrame)
+        self.imageLabel.grid(row=1, column=0)
+
+        self.processedImage = None
+        self.imageLabelPhoto = None # thumbnail
 
     def _makePropertiesFrame(self, frame):
         #Grid.columnconfigure(frame, 0, weight=1)
@@ -455,6 +469,33 @@ class TitlerApp:
         self.file.truncate(0)
         self.file.write(text)
         self.file.flush()
+
+
+    def _getImageFromClipboard(self):
+        clipboardImage = ImageGrab.grabclipboard()
+        if clipboardImage == None:
+            return
+        self.processedImage = clipboardImage
+
+        thumbnail = self.processedImage.resize((384,
+            int(self.processedImage.height/self.processedImage.width*384.0)),
+            Image.BICUBIC)
+        self.imageLabelPhoto = ImageTk.PhotoImage(thumbnail)
+        self.imageLabel.config(image=self.imageLabelPhoto)
+
+    def _saveImage(self):
+        if self.processedImage == None:
+            return
+        file = filedialog.asksaveasfile()
+        if file == None:
+            return
+        try:
+            try:
+                self.processedImage.save(file.name)
+            except KeyError as e:
+                self.processedImage.save(file.name + ".png")
+        except BaseException as e:
+            messagebox.showerror("Error saving image!", str(e))
 
 
 if __name__ == "__main__":
