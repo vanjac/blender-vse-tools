@@ -6,6 +6,7 @@ from tkinter import colorchooser, filedialog, messagebox
 from PIL import Image, ImageGrab, ImageTk
 import webbrowser
 import html
+import struct
 
 def generateCSS(rules):
     """
@@ -475,10 +476,25 @@ class TitlerApp:
         clipboardImage = ImageGrab.grabclipboard()
         if clipboardImage == None:
             return
-        self.processedImage = clipboardImage
+        self.processedImage = clipboardImage.convert("RGB")
 
         bbox = self.processedImage.getbbox()
         self.processedImage = self.processedImage.crop(bbox)
+
+        data = self.processedImage.getdata()
+
+        textColor = struct.unpack('BBB',bytes.fromhex(self.textColor[1:]))
+
+        newData = bytes()
+        for pixel in data:
+            if pixel == (255,0,0):
+                newData += bytes([0,0,0,0])
+            else:
+                alpha = pixel[0]
+                newData += bytes(textColor + (alpha,))
+
+        self.processedImage = \
+            Image.frombytes("RGBA", (self.processedImage.size), newData)
 
         thumbnail = self.processedImage.resize((384,
             int(self.processedImage.height/self.processedImage.width*384.0)),
