@@ -13,6 +13,13 @@ import bpy
 midi_in = None
 last_update_time = -1.0
 
+def get_area_context(name):
+    for area in bpy.context.screen.areas:
+        if area.type == name:
+            ctx = bpy.context.copy()
+            ctx['area'] = area
+            ctx['region'] = area.regions[-1]
+            return ctx
 
 def dj_update(scene):
     global midi_in, last_update_time
@@ -38,14 +45,8 @@ def dj_update(scene):
                 speed = midi_event_data[2]
                 if speed > 63:
                     speed -= 128
-                # https://blender.stackexchange.com/a/53707
-                for area in bpy.context.screen.areas:
-                    if area.type == 'SEQUENCE_EDITOR':
-                        ctx = bpy.context.copy()
-                        ctx['area'] = area
-                        ctx['region'] = area.regions[-1]
-                        bpy.ops.transform.seq_slide(ctx, value=(speed, 0))
-                        break
+                bpy.ops.transform.seq_slide(get_area_context('SEQUENCE_EDITOR'),
+                    value=(speed, 0))
 
 
 class DJStartOperator(bpy.types.Operator):
