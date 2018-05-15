@@ -15,6 +15,8 @@ midi_in = None
 midi_out = None
 last_update_time = -1.0
 
+jog_mode = 0
+
 def get_area_context(name):
     for area in bpy.context.screen.areas:
         if area.type == name:
@@ -24,7 +26,7 @@ def get_area_context(name):
             return ctx
 
 def dj_update(scene):
-    global midi_in, last_update_time
+    global midi_in, last_update_time, jog_mode
     t = time.time()
     if t - last_update_time < 1.0/30.0:
         return
@@ -33,6 +35,8 @@ def dj_update(scene):
     midi_events = midi_in.read(1023)
     for midi_event in midi_events:
         midi_event_data = midi_event[0]
+        #print(midi_event_data)
+
         if midi_event_data[0] == 176:
             # control change
             if midi_event_data[1] == 48:
@@ -50,6 +54,49 @@ def dj_update(scene):
                 bpy.ops.transform.seq_slide(get_area_context('SEQUENCE_EDITOR'),
                     value=(speed, 0))
 
+        if midi_event_data[0] == 144:
+            # note on/off
+            if midi_event_data[1] == 9:
+                # LOOP_KP1_DA
+                jog_mode = 0
+                update_lights()
+            elif midi_event_data[1] == 10:
+                # LOOP_KP2_DA
+                jog_mode = 1
+                update_lights()
+            elif midi_event_data[1] == 11:
+                # LOOP_KP3_DA
+                jog_mode = 2
+                update_lights()
+            elif midi_event_data[1] == 12:
+                # LOOP_KP4_DA
+                jog_mode = 3
+                update_lights()
+
+def update_lights():
+    global midi_out, jog_mode
+    if jog_mode == 0:
+        light_on(9) # LOOP_KP1_DA
+    else:
+        light_off(9)
+    if jog_mode == 1:
+        light_on(10) # LOOP_KP2_DA
+    else:
+        light_off(10)
+    if jog_mode == 2:
+        light_on(11) # LOOP_KP3_DA
+    else:
+        light_off(11)
+    if jog_mode == 3:
+        light_on(12) # LOOP_KP4_DA
+    else:
+        light_off(12)
+
+def light_on(num):
+    midi_out.write( [ [[144, num, 127, 0], pygame.midi.time() ] ] )
+
+def light_off(num):
+    midi_out.write( [ [[144, num, 0, 0], pygame.midi.time() ] ] )
 
 class DJStartOperator(bpy.types.Operator):
     DEVICE_NAME = b'Hercules DJControl Instinct'
@@ -60,7 +107,7 @@ class DJStartOperator(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        global midi_in, midi_out, handler_active
+        global midi_in, midi_out, handler_active, jog_mode
         stop()
         pygame.midi.init()
 
@@ -98,6 +145,9 @@ class DJStartOperator(bpy.types.Operator):
         midi_out = pygame.midi.Output(output_device)
         bpy.app.handlers.scene_update_pre.append(dj_update)
         handler_active = True
+
+        jog_mode = 0
+        update_lights()
 
         return {'FINISHED'}
 
