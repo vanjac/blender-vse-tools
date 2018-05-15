@@ -10,7 +10,9 @@ import time
 import pygame.midi
 import bpy
 
+handler_active = False
 midi_in = None
+midi_out = None
 last_update_time = -1.0
 
 def get_area_context(name):
@@ -50,51 +52,69 @@ def dj_update(scene):
 
 
 class DJStartOperator(bpy.types.Operator):
+    DEVICE_NAME = b'Hercules DJControl Instinct'
+
     bl_idname = "object.dj_start"
     bl_label = "Start DJ Control"
 
     bl_options = {'REGISTER'}
 
-    device = bpy.props.IntProperty(
-        name="Device",
-        description="MIDI Device",
-        min=0, max=99,
-        default=1)
-
-    def invoke(self, context, event):
-        pygame.midi.quit()
+    def execute(self, context):
+        global midi_in, midi_out, handler_active
+        stop()
         pygame.midi.init()
+
+        input_device = -1
+        output_device = -1
+
+        print("MIDI Devices:")
         num_devices = pygame.midi.get_count()
-        print("INPUT DEVICES")
         for device_i in range(0, num_devices):
             info = pygame.midi.get_device_info(device_i)
-            if info[2]:
-                print("Device " + str(device_i) + ":", info[1],
-                    "(ALREADY OPEN!)" if info[4] else "")
+            # (interface name, device name, is input?, is output?, in use?)
+            print(device_i, info)
+            if info[1] == DJStartOperator.DEVICE_NAME:
+                if info[4]:
+                    self.report({'ERROR'}, "Device is already in use!")
+                    pygame.midi.quit()
+                    return {'CANCELLED'}
+                if info[2]:
+                    input_device = device_i
+                elif info[3]:
+                    output_device = device_i
+        print("Input device:", input_device)
+        print("Output device:", output_device)
 
-        wm = context.window_manager
-        return wm.invoke_props_dialog(self)
+        if input_device == -1:
+            self.report({'ERROR'}, "Couldn't find input device!")
+            pygame.midi.quit()
+            return {'CANCELLED'}
+        if output_device == -1:
+            self.report({'ERROR'}, "Couldn't find output device!")
+            pygame.midi.quit()
+            return {'CANCELLED'}
 
-    def execute(self, context):
-        global midi_in
-        print("Start DJ Control")
-
-        if midi_in is None:
-            bpy.app.handlers.scene_update_pre.append(dj_update)
-        midi_in = pygame.midi.Input(self.device)
+        midi_in = pygame.midi.Input(input_device)
+        midi_out = pygame.midi.Output(output_device)
+        bpy.app.handlers.scene_update_pre.append(dj_update)
+        handler_active = True
 
         return {'FINISHED'}
 
 
 def stop():
-    global midi_in
+    global midi_in, midi_out, handler_active
     print("Stop DJ Control")
 
     if midi_in is not None:
-        print("Closing stream")
         midi_in.close()
         midi_in = None
+    if midi_out is not None:
+        midi_out.close()
+        midi_out = None
+    if handler_active:
         bpy.app.handlers.scene_update_pre.remove(dj_update)
+        handler_active = False
     pygame.midi.quit()
 
 class DJStopOperator(bpy.types.Operator):
