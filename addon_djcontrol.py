@@ -24,12 +24,28 @@ def dj_update(scene):
     midi_events = midi_in.read(1023)
     for midi_event in midi_events:
         midi_event_data = midi_event[0]
-        if midi_event_data[0] == 176 and midi_event_data[1] == 48:
-            speed = midi_event_data[2]
-            if speed > 63:
-                speed -= 128
-            frame = scene.frame_current
-            scene.frame_set(frame + speed)
+        if midi_event_data[0] == 176:
+            # control change
+            if midi_event_data[1] == 48:
+                # JOG_DA
+                speed = midi_event_data[2]
+                if speed > 63:
+                    speed -= 128
+                frame = scene.frame_current
+                scene.frame_set(frame + speed)
+            elif midi_event_data[1] == 49:
+                # JOG_DB
+                speed = midi_event_data[2]
+                if speed > 63:
+                    speed -= 128
+                # https://blender.stackexchange.com/a/53707
+                for area in bpy.context.screen.areas:
+                    if area.type == 'SEQUENCE_EDITOR':
+                        ctx = bpy.context.copy()
+                        ctx['area'] = area
+                        ctx['region'] = area.regions[-1]
+                        bpy.ops.transform.seq_slide(ctx, value=(speed, 0))
+                        break
 
 
 class DJStartOperator(bpy.types.Operator):
@@ -69,6 +85,17 @@ class DJStartOperator(bpy.types.Operator):
         return {'FINISHED'}
 
 
+def stop():
+    global midi_in
+    print("Stop DJ Control")
+
+    if midi_in is not None:
+        print("Closing stream")
+        midi_in.close()
+        midi_in = None
+        bpy.app.handlers.scene_update_pre.remove(dj_update)
+    pygame.midi.quit()
+
 class DJStopOperator(bpy.types.Operator):
     bl_idname = "object.dj_stop"
     bl_label = "Stop DJ Control"
@@ -76,16 +103,7 @@ class DJStopOperator(bpy.types.Operator):
     bl_options = {'REGISTER'}
 
     def execute(self, context):
-        global midi_in
-        print("Stop DJ Control")
-
-        if midi_in is not None:
-            print("Closing stream")
-            midi_in.close()
-            midi_in = None
-            bpy.app.handlers.scene_update_pre.remove(dj_update)
-        pygame.midi.quit()
-
+        stop()
         return {'FINISHED'}
 
 
@@ -96,6 +114,7 @@ def register():
 def unregister():
     bpy.utils.unregister_class(DJStartOperator)
     bpy.utils.unregister_class(DJStopOperator)
+    stop()
 
 if __name__ == "__main__":
     register()
