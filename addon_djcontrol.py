@@ -44,8 +44,10 @@ def dj_update(scene):
                 speed = midi_event_data[2]
                 if speed > 63:
                     speed -= 128
-                if jog_mode == 0:
+                if jog_mode == 0 or jog_mode == 1:
                     scene.frame_set(scene.frame_current + speed)
+                    if jog_mode == 1:
+                        bpy.ops.sequencer.view_frame(get_area_context('SEQUENCE_EDITOR'))
                 elif jog_mode == 2:
                     scene.frame_start += speed
             elif midi_event_data[1] == 49:
@@ -53,7 +55,7 @@ def dj_update(scene):
                 speed = midi_event_data[2]
                 if speed > 63:
                     speed -= 128
-                if jog_mode == 0:
+                if jog_mode == 0 or jog_mode == 1:
                     bpy.ops.transform.seq_slide(
                         get_area_context('SEQUENCE_EDITOR'), value=(speed, 0))
                 elif jog_mode == 2:
