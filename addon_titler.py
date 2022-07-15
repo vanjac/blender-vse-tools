@@ -1,6 +1,6 @@
 bl_info = {
     "name": "Titler",
-    "author": "Jacob van't Hoog",
+    "author": "chroma zone",
     "version": (1, 0),
     "blender": (2, 75, 0),
     "category": "Sequencer",
